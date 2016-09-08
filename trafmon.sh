@@ -58,8 +58,8 @@ function main
 
     get_ip_limit | while read ip lim; do
         S=`stat_month $ip`
-        [[ "x$S"="xNULL" ]] && S=0
-
+        [[ "x$S" = "xNULL" ]] && S=0
+        #echo "$ip - $lim - $S"
         res=$(echo "$S > $lim" | bc)
         [[ $res -eq 1 ]] && block $ip || unblock $ip
     done;
