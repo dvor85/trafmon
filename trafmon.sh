@@ -22,7 +22,7 @@ function log
 function stat_month
 {
     IP=$1
-    mysql -B -s -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --execute "select SUM(input)/1024/1024/1024 from traffic where ip='$IP' and MONTH(time)=MONTH(NOW()) limit 1;" || return 1
+    mysql -B -s -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --execute "select SUM(input)/1024/1024/1024 from traffic where ip='$IP' and MONTH(time)=MONTH(NOW()) and ((TIME(time) > '09:00:00' and TIME(time) < '12:00:00') or (TIME(time) > '13:00:00' and TIME(time) < '18:00:00')) limit 1;" || return 1
 }
 
 function truncate_db
