@@ -9,7 +9,7 @@ CHAIN=int2ext
 
 function usage
 {
-    echo "Usage: $(basename $0) [block|unblock|stat <ip>] [clear] [help]"
+    echo "Usage: $(basename $0) [block|unblock <ip>] [stat [ip]] [clear] [help]"
     exit 1
 }
 
@@ -36,6 +36,12 @@ function get_ip_limit
     mysql -B -s -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --execute "select ip,input_traffic_price from users inner join users_ip on users.uid=users_ip.uid where input_traffic_price>0;" || return 1
 }
 
+function get_all_user_ip
+{
+    IP=$1
+    mysql -B -s -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --execute "select ip from users_ip where uid in (select uid from users_ip where ip='$IP');" || return 1
+}
+
 function block
 {
     IP=$1
@@ -59,9 +65,17 @@ function main
     get_ip_limit | while read ip lim; do
         S=`stat_month $ip`
         [[ "x$S" = "xNULL" ]] && S=0
-        #echo "$ip - $lim - $S"
         res=$(echo "$S > $lim" | bc)
         [[ $res -eq 1 ]] && block $ip || unblock $ip
+    done;
+}
+
+function stat_all
+{
+    get_ip_limit | while read ip lim; do
+        S=`stat_month $ip`
+        [[ "x$S" = "xNULL" ]] && S=0
+        echo "$ip | $lim | $S"
     done;
 }
 
@@ -73,7 +87,7 @@ case $1 in
         [[ -n $2 ]] && unblock $2 || usage
     ;;
     "stat")
-        [[ -n $2 ]] && stat_month $2 || usage
+        [[ -n $2 ]] && stat_month $2 || stat_all
     ;;
     "clear")
         truncate_db
