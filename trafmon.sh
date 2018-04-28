@@ -63,8 +63,12 @@ function main
     truncate_db
 
     get_ip_limit | while read ip lim; do
-        S=`stat_month $ip`
-        [[ "x$S" = "xNULL" ]] && S=0
+        S=0
+        for uip in `get_all_user_ip $ip`; do
+            Suip=`stat_month $uip`
+            [[ "x$Suip" = "xNULL" ]] && Suip=0
+            S=`echo "$S+$Suip" | bc`
+        done;
         res=$(echo "$S > $lim" | bc)
         [[ $res -eq 1 ]] && block $ip || unblock $ip
     done;
